@@ -28,7 +28,12 @@ def main() -> None:
     player_score = 0
     comp_score = 0
 
-    print("Rock Paper Scissors — type 'rock', 'paper', 'scissors' (or r/p/s). Type 'quit' to exit.")
+    print("=" * 50)
+    print("🎮 ROCK PAPER SCISSORS GAME 🎮")
+    print("=" * 50)
+    print("Rules: Rock beats Scissors, Scissors beats Paper, Paper beats Rock")
+    print("Type 'rock', 'paper', 'scissors' (or r/p/s). Type 'quit' to exit.")
+    print("=" * 50)
 
     try:
         while True:
