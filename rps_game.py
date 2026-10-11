@@ -1,39 +1,26 @@
 #!/usr/bin/env python3
-"""Simple interactive Rock Paper Scissors game.
+"""Command-line interface for the upgraded Rock Paper Scissors game."""
+from game_engine import CHOICES, DIFFICULTIES, TARGETS, RPSGame
 
-Player types 'rock', 'paper', 'scissors' (or r/p/s). Type 'quit' to stop.
-The computer randomly selects its move. The script shows round winners and
-maintains a running score.
-"""
-import random
-import sys
-
-VALID = {
-    'rock': 'rock', 'r': 'rock',
-    'paper': 'paper', 'p': 'paper',
-    'scissors': 'scissors', 's': 'scissors',
-}
-
-def determine_winner(player: str, comp: str) -> str:
-    """Return 'player', 'computer', or 'tie'."""
-    if player == comp:
-        return 'tie'
-    wins = {'rock': 'scissors', 'scissors': 'paper', 'paper': 'rock'}
-    if wins[player] == comp:
-        return 'player'
-    return 'computer'
+VALID = {choice.lower(): choice for choice in CHOICES}
+VALID.update({choice[0].lower(): choice for choice in CHOICES})
 
 
 def main() -> None:
-    player_score = 0
-    comp_score = 0
-
     print("=" * 50)
-    print("🎮 ROCK PAPER SCISSORS GAME 🎮")
+    print("ROCK PAPER SCISSORS: ARCADE MATCH")
     print("=" * 50)
     print("Rules: Rock beats Scissors, Scissors beats Paper, Paper beats Rock")
-    print("Type 'rock', 'paper', 'scissors' (or r/p/s). Type 'quit' to exit.")
+    print("Type 'rock', 'paper', or 'scissors' (or r/p/s). Type 'quit' to exit.")
     print("=" * 50)
+
+    difficulty = input("Difficulty (Easy/Medium/Hard) [Easy]: ").strip().title() or "Easy"
+    if difficulty not in DIFFICULTIES:
+        difficulty = "Easy"
+    target_text = input("Match target (1/3/5) [3]: ").strip() or "3"
+    target = int(target_text) if target_text.isdigit() and int(target_text) in TARGETS else 3
+    game = RPSGame(difficulty, target)
+    print(f"\nMatch: first to {target} | Difficulty: {difficulty}")
 
     try:
         while True:
@@ -43,37 +30,41 @@ def main() -> None:
                 continue
             if choice in ('quit', 'q'):
                 break
+            if choice == 'new':
+                game.start_match(difficulty, target)
+                print("New match started.")
+                continue
             if choice not in VALID:
                 print("Invalid input. Please type 'rock', 'paper', or 'scissors' (or r/p/s), or 'quit' to exit.")
                 continue
 
-            player_move = VALID[choice]
-            comp_move = random.choice(['rock', 'paper', 'scissors'])
-            result = determine_winner(player_move, comp_move)
+            if game.finished:
+                print(f"Match over: {game.match_winner} won. Type 'new' to play again.")
+                continue
+
+            round_result = game.play_round(VALID[choice])
+            player_move = round_result['player']
+            comp_move = round_result['computer']
+            result = round_result['result']
 
             if result == 'tie':
                 print(f"Both chose {player_move}. It's a tie.")
             elif result == 'player':
-                player_score += 1
                 print(f"You chose {player_move}, computer chose {comp_move}. You win this round!")
             else:
-                comp_score += 1
                 print(f"You chose {player_move}, computer chose {comp_move}. Computer wins this round.")
 
-            print(f"Score — You: {player_score}  Computer: {comp_score}\n")
+            print(f"Match score — You: {game.player_score}  Computer: {game.computer_score}")
+            print(f"Stats — Wins: {game.stats['wins']}  Losses: {game.stats['losses']}  Ties: {game.stats['ties']}  Win rate: {game.win_rate:.1f}%")
+            if game.finished:
+                print(f"MATCH COMPLETE: {game.match_winner.upper()} wins! Type 'new' to play again.\n")
 
     except (KeyboardInterrupt, EOFError):
         # Graceful exit on Ctrl-C / EOF
         print("\nExiting game...")
 
     # Final summary
-    print(f"Final score — You: {player_score}  Computer: {comp_score}")
-    if player_score > comp_score:
-        print("You won the game!")
-    elif comp_score > player_score:
-        print("Computer won the game!")
-    else:
-        print("The game is a tie.")
+    print(f"Session stats — Wins: {game.stats['wins']}  Losses: {game.stats['losses']}  Ties: {game.stats['ties']}")
 
 
 if __name__ == '__main__':
